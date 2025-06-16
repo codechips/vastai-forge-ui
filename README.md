@@ -149,7 +149,7 @@ All logs are automatically rotated and easily searchable through the logdy web i
 ## Compatibility
 
 - **CUDA**: 12.1 (with 12.2 base)
-- **PyTorch**: 2.3.1 (recommended for stability)
+- **PyTorch**: 2.0.1 (with CUDA 12.1 support)
 - **Python**: 3.10
 - **GPU**: NVIDIA GPUs with CUDA support
 - **Platform**: Vast.ai, local Docker environments

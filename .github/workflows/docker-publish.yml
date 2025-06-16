@@ -68,7 +68,7 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
             type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=cuda-12.1-torch-2.3.1,enable={{is_default_branch}}
+            type=raw,value=cuda-12.1-torch-2.0.1,enable={{is_default_branch}}
 
       - name: Update Dockerfile to use built base image
         run: |
