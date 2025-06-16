@@ -32,9 +32,25 @@ RUN curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh |
 # Create non-root user
 RUN useradd -u 1000 -m appuser
 
-# Create workspace directory
-RUN mkdir -p /workspace && \
-    chown appuser:appuser /workspace
+# Create required directories
+RUN mkdir -p /workspace /etc/supervisor/conf.d /var/log/supervisor /data
+
+# Copy configuration files
+COPY etc/supervisor/supervisord.conf /etc/supervisor/
+COPY etc/supervisor/conf.d/*.conf /etc/supervisor/conf.d/
+COPY usr/local/bin/entrypoint-filebrowser.sh /usr/local/bin/
+
+# Make entrypoint script executable
+RUN chmod +x /usr/local/bin/entrypoint-filebrowser.sh
+
+# Set ownership
+RUN chown -R appuser:appuser /workspace /data /var/log/supervisor
+
+# Expose ports
+EXPOSE 8080 7681 8081
 
 # Set working directory
 WORKDIR /workspace
+
+# Run supervisord as root (it will drop privileges for services as configured)
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
