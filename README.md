@@ -68,23 +68,59 @@ vastai-forge-ui/
 
 ## Local Development
 
-### Build Base Image
+### Prerequisites
+- [Docker](https://docs.docker.com/get-docker/)
+- [Mise](https://mise.jdx.dev/) task runner
+
+### Quick Start
 ```bash
-cd base
-docker build -t vastai-base .
+# Build and test everything
+mise run dev
+
+# Or step by step:
+mise run build    # Build both images
+mise run test     # Start test container
+mise run status   # Check service status
 ```
 
-### Build Forge Image
+### Available Mise Tasks
+
+#### Building
 ```bash
-cd forge
-docker build -t vastai-forge .
+mise run build-base     # Build base image only
+mise run build-forge    # Build forge image (depends on base)
+mise run build          # Build both images
+mise run build-no-cache # Build without cache (for debugging)
 ```
 
-### Run Locally
+#### Testing
 ```bash
-docker run -p 8000:8000 -p 7000:7000 -p 7010:7010 -p 7020:7020 \
+mise run test           # Start test container
+mise run test-services  # Test services with curl
+mise run dev            # Full development workflow
+```
+
+#### Management
+```bash
+mise run status         # Check container and service status
+mise run logs           # Follow container logs
+mise run shell          # Get shell access to container
+mise run stop           # Stop test container
+mise run clean          # Clean up everything
+```
+
+### Manual Docker Commands
+If you prefer not to use Mise:
+```bash
+# Build images
+cd base && docker build -t vastai-base:local .
+cd ../forge && docker build -t vastai-forge:local .
+
+# Run container
+docker run -d --name vastai-test \
+  -p 8000:8000 -p 7000:7000 -p 7010:7010 -p 7020:7020 \
   -e USERNAME=admin -e PASSWORD=admin \
-  vastai-forge
+  vastai-forge:local
 ```
 
 ## Log Monitoring

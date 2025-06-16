@@ -1,0 +1,128 @@
+[tasks.build-base]
+description = "Build the base Docker image locally"
+run = [
+    "echo '📦 Building base image...'",
+    "cd base && docker build -t vastai-base:local ."
+]
+
+[tasks.build-forge]
+description = "Build the Forge Docker image locally (requires base image)"
+depends = ["build-base"]
+run = [
+    "echo '📝 Creating local Forge Dockerfile...'",
+    "cp forge/Dockerfile forge/Dockerfile.local",
+    "sed -i.bak 's|FROM ghcr.io/codechips/vastai-base:latest|FROM vastai-base:local|g' forge/Dockerfile.local",
+    "echo '🔥 Building Forge image...'",
+    "cd forge && docker build -f Dockerfile.local -t vastai-forge:local ."
+]
+
+[tasks.build]
+description = "Build both base and forge images"
+depends = ["build-forge"]
+run = [
+    "echo '✅ Build completed successfully!'",
+    "echo ''",
+    "echo '🚀 To test the images run: mise run test'",
+    "echo '🧹 To clean up run: mise run clean'"
+]
+
+[tasks.test]
+description = "Run the Forge image locally for testing"
+depends = ["build"]
+run = [
+    "echo '🚀 Starting Vast.ai Forge container...'",
+    "docker run -d --name vastai-test -p 8000:8000 -p 7000:7000 -p 7010:7010 -p 7020:7020 -e USERNAME=admin -e PASSWORD=admin vastai-forge:local",
+    "echo ''",
+    "echo '🌐 Services will be available at:'",
+    "echo '  - Forge UI: http://localhost:8000 (admin/admin)'",
+    "echo '  - File Manager: http://localhost:7000 (admin/admin)'",
+    "echo '  - Terminal: http://localhost:7010 (admin/admin)'",
+    "echo '  - Logs: http://localhost:7020'",
+    "echo ''",
+    "echo '📋 Useful commands:'",
+    "echo '  - Check status: docker ps'",
+    "echo '  - View logs: docker logs vastai-test'",
+    "echo '  - Shell access: docker exec -it vastai-test bash'",
+    "echo '  - Stop container: mise run stop'"
+]
+
+[tasks.stop]
+description = "Stop the test container"
+run = [
+    "echo '⏹️  Stopping test container...'",
+    "docker stop vastai-test || echo 'Container not running'",
+    "docker rm vastai-test || echo 'Container not found'"
+]
+
+[tasks.logs]
+description = "Show logs from the test container"
+run = [
+    "docker logs -f vastai-test"
+]
+
+[tasks.shell]
+description = "Get a shell inside the test container"
+run = [
+    "docker exec -it vastai-test bash"
+]
+
+[tasks.status]
+description = "Check status of services in the test container"
+run = [
+    "echo '📊 Container status:'",
+    "docker ps --filter name=vastai-test",
+    "echo ''",
+    "echo '🔧 Service status:'",
+    "docker exec vastai-test supervisorctl status || echo 'Container not running'"
+]
+
+[tasks.clean]
+description = "Clean up local images and test containers"
+run = [
+    "echo '🧹 Cleaning up...'",
+    "docker stop vastai-test 2>/dev/null || true",
+    "docker rm vastai-test 2>/dev/null || true",
+    "docker rmi vastai-forge:local 2>/dev/null || true", 
+    "docker rmi vastai-base:local 2>/dev/null || true",
+    "rm -f forge/Dockerfile.local forge/Dockerfile.local.bak",
+    "echo '✅ Cleanup completed'"
+]
+
+[tasks.build-no-cache]
+description = "Build images without Docker cache (for debugging)"
+run = [
+    "echo '📦 Building base image (no cache)...'",
+    "cd base && docker build --no-cache -t vastai-base:local .",
+    "echo '📝 Creating local Forge Dockerfile...'",
+    "cp forge/Dockerfile forge/Dockerfile.local",
+    "sed -i.bak 's|FROM ghcr.io/codechips/vastai-base:latest|FROM vastai-base:local|g' forge/Dockerfile.local",
+    "echo '🔥 Building Forge image (no cache)...'",
+    "cd forge && docker build --no-cache -f Dockerfile.local -t vastai-forge:local .",
+    "echo '✅ Build completed!'"
+]
+
+[tasks.test-services]
+description = "Test individual services with curl"
+run = [
+    "echo '🧪 Testing services...'",
+    "echo 'Testing Forge UI health endpoint:'",
+    "curl -s -u admin:admin http://localhost:8000/health || echo 'Forge UI not responding'",
+    "echo ''",
+    "echo 'Testing Filebrowser:'", 
+    "curl -s -u admin:admin -o /dev/null -w 'HTTP %{http_code}' http://localhost:7000 || echo 'Filebrowser not responding'",
+    "echo ''",
+    "echo 'Testing Logdy:'",
+    "curl -s -o /dev/null -w 'HTTP %{http_code}' http://localhost:7020 || echo 'Logdy not responding'",
+    "echo ''"
+]
+
+[tasks.dev]
+description = "Full development workflow: build, test, and show status"
+depends = ["build", "test"]
+run = [
+    "echo '⏳ Waiting for services to start...'",
+    "sleep 10",
+    "mise run status",
+    "echo ''",
+    "mise run test-services"
+]
