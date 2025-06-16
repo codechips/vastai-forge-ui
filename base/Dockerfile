@@ -28,8 +28,11 @@ RUN wget https://github.com/logdyhq/logdy-core/releases/download/v0.17.0/logdy_l
 # Install filebrowser
 RUN curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash
 
-# Create non-root user
-RUN useradd -u 1000 -m appuser
+# Create non-root user with proper shell setup
+RUN useradd -u 1000 -m -s /bin/bash appuser && \
+    echo 'export PATH="/home/appuser/.local/bin:$PATH"' >> /home/appuser/.bashrc && \
+    echo 'cd /workspace' >> /home/appuser/.bashrc && \
+    chown appuser:appuser /home/appuser/.bashrc
 
 # Create required directories
 RUN mkdir -p /workspace /etc/supervisor/conf.d /var/log/supervisor /data
