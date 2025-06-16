@@ -47,6 +47,7 @@ This document contains important information extracted from Vast.ai documentatio
 - `GPU_COUNT`: Number of GPU devices
 - `PUBLIC_IPADDR`: Instance's public IP address
 - `SSH_PUBLIC_KEY`: Account SSH public key
+- `OPEN_BUTTON_PORT`: Port number that will be linked to the "Open" button in the Vast.ai interface. This allows you to specify which service should be easily accessible via the UI
 
 #### Custom Variables
 - Can be set using `-e` flag
@@ -79,3 +80,4 @@ Given these constraints, our Docker image should:
 3. Utilize environment variables for configuration
 4. Ensure all services can work within resource constraints
 5. Handle the SSH/Jupyter injection gracefully if those launch modes are used
+6. Consider setting `OPEN_BUTTON_PORT` to point to our main service (e.g., filebrowser on port 8080) for easy UI access
