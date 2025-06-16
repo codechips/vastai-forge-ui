@@ -15,6 +15,20 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# Install ttyd
+RUN wget https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 && \
+    chmod +x ttyd.x86_64 && \
+    mv ttyd.x86_64 /usr/local/bin/ttyd && \
+    rm -f ttyd.x86_64
+
+# Install logdy
+RUN curl https://logdy.dev/install.sh | sh && \
+    mv ~/.logdy/bin/logdy /usr/local/bin/logdy && \
+    rm -rf ~/.logdy
+
+# Install filebrowser
+RUN curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash
+
 # Create non-root user
 RUN useradd -u 1000 -m appuser
 
