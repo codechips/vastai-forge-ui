@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.2.0-cudnn8-runtime-ubuntu22.04
+FROM nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
 
 # Prevent prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -6,12 +6,12 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Update and install base packages
 RUN apt-get update && \
     apt-get install -y \
-        curl \
-        wget \
-        vim \
-        git \
-        python3 \
-        supervisor && \
+    curl \
+    wget \
+    vim \
+    git \
+    python3 \
+    supervisor && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -22,9 +22,8 @@ RUN wget https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 &&
     rm -f ttyd.x86_64
 
 # Install logdy
-RUN curl https://logdy.dev/install.sh | sh && \
-    mv ~/.logdy/bin/logdy /usr/local/bin/logdy && \
-    rm -rf ~/.logdy
+RUN wget https://github.com/logdyhq/logdy-core/releases/download/v0.17.0/logdy_linux_amd64 -O /usr/local/bin/logdy && \
+    chmod +x /usr/local/bin/logdy
 
 # Install filebrowser
 RUN curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash
