@@ -11,7 +11,8 @@ RUN apt-get update && \
     vim \
     git \
     python3 \
-    supervisor && \
+    supervisor \
+    sudo && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -32,7 +33,13 @@ RUN curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh |
 RUN useradd -u 1000 -m -s /bin/bash appuser && \
     echo 'export PATH="/home/appuser/.local/bin:$PATH"' >> /home/appuser/.bashrc && \
     echo 'cd /workspace' >> /home/appuser/.bashrc && \
-    chown appuser:appuser /home/appuser/.bashrc
+    echo '# Auto-start services if not running' >> /home/appuser/.bashrc && \
+    echo 'if command -v start-services.sh >/dev/null 2>&1 && ! pgrep -f supervisord >/dev/null; then' >> /home/appuser/.bashrc && \
+    echo '    echo "Starting services..."' >> /home/appuser/.bashrc && \
+    echo '    sudo /usr/local/bin/start-services.sh' >> /home/appuser/.bashrc && \
+    echo 'fi' >> /home/appuser/.bashrc && \
+    chown appuser:appuser /home/appuser/.bashrc && \
+    echo 'appuser ALL=(ALL) NOPASSWD: /usr/local/bin/start-services.sh' >> /etc/sudoers
 
 # Create required directories
 RUN mkdir -p /workspace /etc/supervisor/conf.d /var/log/supervisor /data

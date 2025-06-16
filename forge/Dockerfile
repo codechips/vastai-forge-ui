@@ -39,16 +39,18 @@ RUN python3 -m venv venv && \
 USER root
 
 # Copy configuration files
+COPY config/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY config/nginx/forge.conf /etc/nginx/sites-available/
 COPY config/supervisord/*.conf /etc/supervisor/conf.d/
 COPY scripts/setup-auth.sh /usr/local/bin/
+COPY scripts/start-services.sh /usr/local/bin/
 
 # Enable nginx site
 RUN ln -s /etc/nginx/sites-available/forge.conf /etc/nginx/sites-enabled/ && \
     rm -f /etc/nginx/sites-enabled/default
 
 # Make scripts executable
-RUN chmod +x /usr/local/bin/setup-auth.sh
+RUN chmod +x /usr/local/bin/setup-auth.sh /usr/local/bin/start-services.sh
 
 # Create necessary directories and set permissions
 RUN mkdir -p /var/log/nginx /var/lib/nginx /var/cache/nginx /etc/nginx/conf.d && \
