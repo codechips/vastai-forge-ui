@@ -72,12 +72,37 @@ This document contains important information extracted from Vast.ai documentatio
 5. **Resource Awareness**: Your container will have resource limits based on instance pricing
 6. **Network Security**: Remember that external ports are randomized for security
 
-## Implications for Our Docker Image
+## Implications for Our Docker Images
 
-Given these constraints, our Docker image should:
+Given these constraints, our Docker images should:
 1. Use a simple CMD instead of complex ENTRYPOINT when possible
 2. Be flexible with port assignments
 3. Utilize environment variables for configuration
 4. Ensure all services can work within resource constraints
 5. Handle the SSH/Jupyter injection gracefully if those launch modes are used
-6. Consider setting `OPEN_BUTTON_PORT` to point to our main service (e.g., filebrowser on port 8080) for easy UI access
+6. Consider setting `OPEN_BUTTON_PORT` to point to our main service
+
+## Our Docker Image Architecture
+
+### Base Image: `ghcr.io/codechips/vastai-base`
+**Ports (7xxx range):**
+- **7000**: Filebrowser (file management with native auth)
+- **7010**: ttyd (terminal access with credentials)
+- **7020**: logdy (log viewer, read-only)
+
+### Forge Image: `ghcr.io/codechips/vastai-forge`
+**Inherits base services plus:**
+- **8000**: Forge UI (protected with nginx basic auth) - `OPEN_BUTTON_PORT`
+
+### Authentication
+All services use unified credentials:
+- Environment variables: `USERNAME` and `PASSWORD`
+- Default: `admin` / `admin`
+
+### Vast.ai Template Configuration
+```
+Docker Image: ghcr.io/codechips/vastai-forge:latest
+Port Mappings: -p 8000:8000 -p 7000:7000 -p 7010:7010 -p 7020:7020
+Environment: -e USERNAME=myuser -e PASSWORD=mypass -e OPEN_BUTTON_PORT=8000
+Launch Mode: Entrypoint (recommended for multi-service setup)
+```

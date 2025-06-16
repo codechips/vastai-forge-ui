@@ -1,0 +1,88 @@
+name: Docker Build and Publish
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  packages: write
+  contents: read
+
+jobs:
+  build-base:
+    runs-on: ubuntu-latest
+    outputs:
+      base-image-tag: ${{ steps.meta.outputs.tags }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for base image
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/codechips/vastai-base
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=cuda-12.2,enable={{is_default_branch}}
+
+      - name: Build and push base image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./base
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  build-forge:
+    runs-on: ubuntu-latest
+    needs: build-base
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for forge image
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/codechips/vastai-forge
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=cuda-12.1-torch-2.3.1,enable={{is_default_branch}}
+
+      - name: Update Dockerfile to use built base image
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            sed -i 's|FROM ghcr.io/codechips/vastai-base:latest|FROM ghcr.io/codechips/vastai-base:latest|g' forge/Dockerfile
+          else
+            # For PR builds, use the specific tag
+            sed -i "s|FROM ghcr.io/codechips/vastai-base:latest|FROM ghcr.io/codechips/vastai-base:${{ github.ref_name }}|g" forge/Dockerfile
+          fi
+
+      - name: Build and push forge image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./forge
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

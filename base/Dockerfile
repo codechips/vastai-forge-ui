@@ -47,7 +47,7 @@ RUN chmod +x /usr/local/bin/entrypoint-filebrowser.sh
 RUN chown -R appuser:appuser /workspace /data /var/log/supervisor
 
 # Expose ports
-EXPOSE 8080 7681 8081
+EXPOSE 7000 7010 7020
 
 # Set working directory
 WORKDIR /workspace

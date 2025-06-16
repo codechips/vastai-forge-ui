@@ -1,0 +1,115 @@
+# Vast.ai Forge UI Docker Images
+
+Multi-stage Docker setup for running Stable Diffusion WebUI Forge on Vast.ai with integrated web-based management tools.
+
+## Architecture
+
+### Base Image (`ghcr.io/codechips/vastai-base`)
+Foundation image with management tools:
+- **Filebrowser** (port 7000): File management interface
+- **ttyd** (port 7010): Web-based terminal
+- **logdy** (port 7020): Log viewer
+- **Supervisord**: Process management
+
+### Forge Image (`ghcr.io/codechips/vastai-forge`)
+Extends base image with:
+- **Stable Diffusion WebUI Forge** (port 8000): AI image generation interface
+- **Nginx reverse proxy**: Authentication for Forge UI
+- **PyTorch 2.3.1 + CUDA 12.1**: Optimized for stability
+
+## Quick Start
+
+### For Vast.ai Users
+
+1. Create a new instance with:
+   ```
+   Docker Image: ghcr.io/codechips/vastai-forge:latest
+   ```
+
+2. Configure environment variables:
+   ```bash
+   -e USERNAME=your_username -e PASSWORD=your_password -e OPEN_BUTTON_PORT=8000
+   ```
+
+3. Map ports:
+   ```bash
+   -p 8000:8000 -p 7000:7000 -p 7010:7010 -p 7020:7020
+   ```
+
+4. Launch with "Entrypoint" mode for best compatibility
+
+### Access Your Services
+
+- **Forge UI**: Port 8000 (main interface, protected with auth)
+- **File Manager**: Port 7000 (manage models and outputs)
+- **Terminal**: Port 7010 (command line access)
+- **Logs**: Port 7020 (monitor application logs)
+
+## Default Credentials
+
+- Username: `admin`
+- Password: `admin`
+
+## Directory Structure
+
+```
+vastai-forge-ui/
+├── base/                    # Base image with management tools
+│   ├── Dockerfile
+│   ├── etc/supervisor/      # Process management configs
+│   └── usr/local/bin/       # Scripts
+├── forge/                   # Forge UI image
+│   ├── Dockerfile
+│   ├── config/              # Nginx and supervisord configs
+│   └── scripts/             # Setup scripts
+├── docs/                    # Documentation
+└── .github/workflows/       # CI/CD pipeline
+```
+
+## Local Development
+
+### Build Base Image
+```bash
+cd base
+docker build -t vastai-base .
+```
+
+### Build Forge Image
+```bash
+cd forge
+docker build -t vastai-forge .
+```
+
+### Run Locally
+```bash
+docker run -p 8000:8000 -p 7000:7000 -p 7010:7010 -p 7020:7020 \
+  -e USERNAME=admin -e PASSWORD=admin \
+  vastai-forge
+```
+
+## Security Features
+
+- Unified authentication across all services
+- Basic authentication for Forge UI via nginx
+- Native authentication for file browser and terminal
+- Configurable credentials via environment variables
+
+## Compatibility
+
+- **CUDA**: 12.1 (with 12.2 base)
+- **PyTorch**: 2.3.1 (recommended for stability)
+- **Python**: 3.10
+- **GPU**: NVIDIA GPUs with CUDA support
+- **Platform**: Vast.ai, local Docker environments
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test with both base and forge images
+5. Submit a pull request
+
+## License
+
+This project is open source. Please check individual component licenses for specific terms.
