@@ -43,7 +43,7 @@ Extends base image with:
 - **Forge UI**: Port 8000 (main interface, protected with auth)
 - **File Manager**: Port 7000 (manage models and outputs)
 - **Terminal**: Port 7010 (command line access)
-- **Logs**: Port 7020 (monitor application logs)
+- **Logs**: Port 7020 (monitor all application logs including Forge UI)
 
 ## Default Credentials
 
@@ -86,6 +86,22 @@ docker run -p 8000:8000 -p 7000:7000 -p 7010:7010 -p 7020:7020 \
   -e USERNAME=admin -e PASSWORD=admin \
   vastai-forge
 ```
+
+## Log Monitoring
+
+The logdy interface (port 7020) provides real-time monitoring of:
+
+### Base Image Logs
+- **Filebrowser**: Application logs and access logs
+- **ttyd**: Terminal session logs
+- **Supervisord**: Process management logs
+
+### Forge Image Additional Logs
+- **Forge UI**: Complete Stable Diffusion WebUI Forge logs including model loading, generation progress, and errors
+- **Nginx**: Access and error logs for the authentication proxy
+- **System**: All supervisord managed service logs
+
+All logs are automatically rotated and easily searchable through the logdy web interface.
 
 ## Security Features
 
