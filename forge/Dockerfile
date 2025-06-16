@@ -13,8 +13,8 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Install PyTorch 2.0.1 with CUDA 12.1 support (latest available version)
-RUN pip3 install torch==2.0.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+# Install PyTorch with CUDA 12.1 support
+RUN pip3 install torch==2.1.0+cu121 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 # Clone Forge UI repository
 RUN git clone https://github.com/lllyasviel/stable-diffusion-webui-forge.git /forge
@@ -40,9 +40,13 @@ RUN chmod +x /usr/local/bin/setup-auth.sh
 # Create necessary directories
 RUN mkdir -p /var/log/nginx
 
+# Set build arguments for credentials (can be overridden at build time)
+ARG DEFAULT_USERNAME=admin
+ARG DEFAULT_PASSWORD=admin
+
 # Set environment variables
-ENV USERNAME=admin
-ENV PASSWORD=admin
+ENV USERNAME=${DEFAULT_USERNAME}
+ENV PASSWORD=${DEFAULT_PASSWORD}
 ENV OPEN_BUTTON_PORT=8000
 
 # Expose Forge UI port
