@@ -16,11 +16,17 @@ htpasswd -cb /etc/nginx/.htpasswd "$USERNAME" "$PASSWORD"
 sed -i "s/\${USERNAME}/$USERNAME/g" /etc/supervisor/conf.d/ttyd.conf
 sed -i "s/\${PASSWORD}/$PASSWORD/g" /etc/supervisor/conf.d/ttyd.conf
 
-# Ensure proper ownership of log directories
-chown -R appuser:appuser /var/log/supervisor
-
-# Ensure workspace and data directories exist with proper permissions
-mkdir -p /workspace /data
-chown -R appuser:appuser /workspace /data
+# Only change ownership if running as root
+if [ "$(id -u)" = "0" ]; then
+    # Ensure proper ownership of log directories
+    chown -R appuser:appuser /var/log/supervisor
+    
+    # Ensure workspace and data directories exist with proper permissions
+    mkdir -p /workspace /data
+    chown -R appuser:appuser /workspace /data
+else
+    # Just create directories if not root
+    mkdir -p /workspace /data
+fi
 
 echo "Authentication setup completed"

@@ -13,17 +13,30 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Install PyTorch with CUDA 12.1 support
-RUN pip3 install torch==2.1.0+cu121 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+# Create forge directory and set ownership before switching user
+RUN mkdir -p /forge && chown -R appuser:appuser /forge
+
+# Switch to non-root user for pip installations
+USER appuser
+WORKDIR /forge
+
+# Install PyTorch (will use CUDA on x86_64, CPU on ARM64)
+RUN if [ "$(uname -m)" = "x86_64" ]; then \
+        pip3 install --user torch==2.1.0+cu121 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121; \
+    else \
+        pip3 install --user torch==2.0.1 torchvision torchaudio; \
+    fi
 
 # Clone Forge UI repository
-RUN git clone https://github.com/lllyasviel/stable-diffusion-webui-forge.git /forge
-WORKDIR /forge
+RUN git clone https://github.com/lllyasviel/stable-diffusion-webui-forge.git .
 
 # Create virtual environment and install dependencies
 RUN python3 -m venv venv && \
     . venv/bin/activate && \
     pip install --upgrade pip wheel setuptools
+
+# Switch back to root for system-level operations
+USER root
 
 # Copy configuration files
 COPY config/nginx/forge.conf /etc/nginx/sites-available/
@@ -37,8 +50,11 @@ RUN ln -s /etc/nginx/sites-available/forge.conf /etc/nginx/sites-enabled/ && \
 # Make scripts executable
 RUN chmod +x /usr/local/bin/setup-auth.sh
 
-# Create necessary directories
-RUN mkdir -p /var/log/nginx
+# Create necessary directories and set permissions
+RUN mkdir -p /var/log/nginx /var/lib/nginx /var/cache/nginx /etc/nginx/conf.d && \
+    chown -R appuser:appuser /var/log/nginx /var/lib/nginx /var/cache/nginx /forge && \
+    touch /etc/nginx/.htpasswd && \
+    chown appuser:appuser /etc/nginx/.htpasswd
 
 # Set build arguments for credentials (can be overridden at build time)
 ARG DEFAULT_USERNAME=admin
