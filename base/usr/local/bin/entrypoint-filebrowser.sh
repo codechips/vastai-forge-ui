@@ -20,4 +20,4 @@ else
 fi
 
 # Launch filebrowser
-exec filebrowser --database "$DB_PATH" --port 7000 --root /workspace
+exec filebrowser --database "$DB_PATH" --port 7010 --address 0.0.0.0 --root /workspace
