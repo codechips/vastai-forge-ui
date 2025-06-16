@@ -25,12 +25,21 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
         
-    - name: Build and push Docker image
+    - name: Build and push base Docker image
       uses: docker/build-push-action@v5
       with:
         context: ./base
         file: ./base/Dockerfile
         push: true
         tags: |
-          ghcr.io/${{ github.repository_owner }}/sd-base:latest
-          ghcr.io/${{ github.repository_owner }}/sd-base:cuda-12.2
+          ghcr.io/${{ github.repository_owner }}/vastai-base:latest
+          ghcr.io/${{ github.repository_owner }}/vastai-base:cuda-12.2
+          
+    - name: Build and push forge Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./forge
+        file: ./forge/Dockerfile
+        push: true
+        tags: |
+          ghcr.io/${{ github.repository_owner }}/vastai-forge:latest
