@@ -65,6 +65,10 @@ EXPOSE 7010 7020 8010
 # Set working directory
 WORKDIR /workspace
 
-# Default CMD - supervisord will be started by onstart.sh when running on Vast.ai
-# For local testing, you can override with: docker run --entrypoint /usr/local/bin/entrypoint.sh
-CMD ["/bin/bash"]
+# Support for different Vast.ai launch modes:
+# - Entrypoint mode: Uses the ENTRYPOINT directive below
+# - SSH/Jupyter mode: Ignores ENTRYPOINT, runs /root/onstart.sh instead
+# For local testing: docker run vastai-base
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD []
