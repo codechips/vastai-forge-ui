@@ -12,7 +12,8 @@ RUN apt-get update && \
     git \
     python3 \
     supervisor \
-    sudo && \
+    sudo \
+    apache2-utils && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -48,9 +49,11 @@ RUN mkdir -p /workspace /etc/supervisor/conf.d /var/log/supervisor /data
 COPY etc/supervisor/supervisord.conf /etc/supervisor/
 COPY etc/supervisor/conf.d/*.conf /etc/supervisor/conf.d/
 COPY usr/local/bin/entrypoint-filebrowser.sh /usr/local/bin/
+COPY scripts/entrypoint.sh /usr/local/bin/
+COPY scripts/setup-auth.sh /usr/local/bin/
 
-# Make entrypoint script executable
-RUN chmod +x /usr/local/bin/entrypoint-filebrowser.sh
+# Make scripts executable
+RUN chmod +x /usr/local/bin/entrypoint-filebrowser.sh /usr/local/bin/entrypoint.sh /usr/local/bin/setup-auth.sh
 
 # Set ownership
 RUN chown -R appuser:appuser /workspace /data /var/log/supervisor
@@ -61,5 +64,6 @@ EXPOSE 7010 7020 8010
 # Set working directory
 WORKDIR /workspace
 
-# Run supervisord as root (it will drop privileges for services as configured)
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
+# Use our entrypoint script
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD []

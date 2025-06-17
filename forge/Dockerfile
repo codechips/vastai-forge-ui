@@ -44,13 +44,14 @@ COPY config/nginx/forge.conf /etc/nginx/sites-available/
 COPY config/supervisord/*.conf /etc/supervisor/conf.d/
 COPY scripts/setup-auth.sh /usr/local/bin/
 COPY scripts/start-services.sh /usr/local/bin/
+COPY scripts/entrypoint.sh /usr/local/bin/
 
 # Enable nginx site
 RUN ln -s /etc/nginx/sites-available/forge.conf /etc/nginx/sites-enabled/ && \
     rm -f /etc/nginx/sites-enabled/default
 
 # Make scripts executable
-RUN chmod +x /usr/local/bin/setup-auth.sh /usr/local/bin/start-services.sh
+RUN chmod +x /usr/local/bin/setup-auth.sh /usr/local/bin/start-services.sh /usr/local/bin/entrypoint.sh
 
 # Create necessary directories and set permissions
 RUN mkdir -p /var/log/nginx /var/lib/nginx /var/cache/nginx /etc/nginx/conf.d && \
@@ -73,5 +74,6 @@ EXPOSE 8000
 # Set working directory
 WORKDIR /forge
 
-# Override CMD to run setup and start supervisord
-CMD ["/bin/bash", "-c", "/usr/local/bin/setup-auth.sh && /usr/bin/supervisord -c /etc/supervisor/supervisord.conf"]
+# Use our entrypoint script
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD []
