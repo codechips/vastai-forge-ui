@@ -13,18 +13,19 @@ main() {
     mkdir -p /var/log/nginx
     mkdir -p /workspace
     
+    # Sync workspace on first boot
+    echo "Checking workspace..."
+    /usr/local/bin/sync-workspace.sh
+    
     # Set up authentication if credentials are provided
     setup_auth
     
     # Ensure proper ownership
-    chown -R appuser:appuser /workspace /forge
+    chown -R appuser:appuser /workspace
     chown appuser:appuser /home/appuser
     
     # Set git safe directories to prevent ownership issues
     setup_git_config
-    
-    # Initialize forge if needed
-    setup_forge
     
     # Start supervisord
     echo "Starting supervisord..."
@@ -56,21 +57,6 @@ setup_git_config() {
     "
 }
 
-setup_forge() {
-    echo "Setting up Forge environment..."
-    
-    # Ensure forge directory exists and is owned by appuser
-    if [[ ! -d /forge ]]; then
-        mkdir -p /forge
-        chown appuser:appuser /forge
-    fi
-    
-    # Ensure venv exists
-    if [[ ! -d /forge/venv ]]; then
-        echo "Creating Python virtual environment..."
-        sudo -u appuser bash -c "cd /forge && python3 -m venv venv"
-    fi
-}
 
 # Save environment variables to /etc/environment for persistence
 save_environment() {
