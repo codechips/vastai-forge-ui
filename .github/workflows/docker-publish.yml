@@ -8,7 +8,9 @@ on:
     branches: [ main ]
 
 permissions:
+  contents: read
   packages: write
+  id-token: write
 
 jobs:
   build-and-push:
@@ -32,8 +34,12 @@ jobs:
         file: ./base/Dockerfile
         push: true
         tags: |
-          ghcr.io/${{ github.repository_owner }}/vastai-base:latest
-          ghcr.io/${{ github.repository_owner }}/vastai-base:cuda-12.2
+          ghcr.io/${{ github.repository }}/vastai-base:latest
+          ghcr.io/${{ github.repository }}/vastai-base:cuda-12.2
+        labels: |
+          org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          org.opencontainers.image.description=Vast.ai base image with CUDA 12.2 support
+          org.opencontainers.image.licenses=MIT
           
     - name: Build and push forge Docker image
       uses: docker/build-push-action@v5
@@ -42,4 +48,8 @@ jobs:
         file: ./forge/Dockerfile
         push: true
         tags: |
-          ghcr.io/${{ github.repository_owner }}/vastai-forge:latest
+          ghcr.io/${{ github.repository }}/vastai-forge:latest
+        labels: |
+          org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          org.opencontainers.image.description=Vast.ai Forge UI with Stable Diffusion WebUI
+          org.opencontainers.image.licenses=MIT
