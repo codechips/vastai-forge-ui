@@ -1,1 +1,5 @@
 vendor/base-image
+
+# Sensitive files
+prompts.md
+spec.md
