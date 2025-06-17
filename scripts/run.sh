@@ -73,6 +73,26 @@ function start_logdy() {
     echo "logdy: log file at /workspace/logs/logdy.log"
 }
 
+function run_provisioning() {
+    # Check if provisioning is enabled
+    if [[ -z "${PROVISION_URL}" ]]; then
+        echo "provisioning: PROVISION_URL not set, skipping model provisioning"
+        return
+    fi
+
+    echo "provisioning: starting model provisioning"
+    echo "provisioning: config URL: ${PROVISION_URL}"
+
+    # Run provisioning script (uv will handle dependencies automatically)
+    echo "provisioning: downloading models..."
+    if /opt/bin/provision/provision.py "${PROVISION_URL}"; then
+        echo "provisioning: completed successfully"
+    else
+        echo "provisioning: failed, but continuing startup"
+        echo "provisioning: check /workspace/logs/provision.log for details"
+    fi
+}
+
 function setup_workspace() {
     echo "Setting up workspace..."
 
@@ -86,10 +106,12 @@ function setup_workspace() {
     mkdir -p /workspace/models/embeddings
     mkdir -p /workspace/models/hypernetworks
     mkdir -p /workspace/models/ControlNet
+    mkdir -p /workspace/models/ESRGAN
+    mkdir -p /workspace/outputs
 
     # Create symlinks from Forge to workspace if not exists
     cd /opt/forge
-    for dir in models/Stable-diffusion models/VAE models/Lora embeddings models/hypernetworks models/ControlNet; do
+    for dir in models/Stable-diffusion models/VAE models/Lora embeddings models/hypernetworks models/ControlNet models/ESRGAN; do
         if [ ! -L "$dir" ] && [ -d "/workspace/$dir" ]; then
             rm -rf "$dir" 2>/dev/null || true
             ln -s "/workspace/$dir" "$dir"
@@ -124,6 +146,12 @@ function show_info() {
     echo "  - Filebrowser: /workspace/logs/filebrowser.log"
     echo "  - TTYd: /workspace/logs/ttyd.log"
     echo "  - Logdy: /workspace/logs/logdy.log"
+    echo "  - Provisioning: /workspace/logs/provision.log"
+    echo ""
+    echo "Environment Variables:"
+    echo "  - PROVISION_URL: ${PROVISION_URL:-not set}"
+    echo "  - HF_TOKEN: ${HF_TOKEN:+present}"
+    echo "  - CIVITAI_TOKEN: ${CIVITAI_TOKEN:+present}"
     echo ""
     echo "========================================="
 }
@@ -133,6 +161,9 @@ echo "Starting VastAI Forge container..."
 
 # Setup workspace
 setup_workspace
+
+# Run provisioning if enabled
+run_provisioning
 
 # Start services
 start_filebrowser

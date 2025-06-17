@@ -103,7 +103,8 @@ COPY config/forge/ /etc/forge/
 COPY config/filebrowser/filebrowser.json /root/.filebrowser.json
 RUN mkdir -p /opt/bin
 COPY scripts/run.sh /opt/bin/run.sh
-RUN chmod +x /opt/bin/run.sh
+COPY scripts/provision/ /opt/bin/provision/
+RUN chmod +x /opt/bin/run.sh /opt/bin/provision/provision.py
 
 # Add build timestamp
 RUN date -u +"%Y-%m-%dT%H:%M:%SZ" > /root/BUILDTIME.txt
