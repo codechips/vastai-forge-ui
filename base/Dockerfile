@@ -51,9 +51,10 @@ COPY etc/supervisor/conf.d/*.conf /etc/supervisor/conf.d/
 COPY usr/local/bin/entrypoint-filebrowser.sh /usr/local/bin/
 COPY scripts/entrypoint.sh /usr/local/bin/
 COPY scripts/setup-auth.sh /usr/local/bin/
+COPY scripts/onstart.sh /root/
 
 # Make scripts executable
-RUN chmod +x /usr/local/bin/entrypoint-filebrowser.sh /usr/local/bin/entrypoint.sh /usr/local/bin/setup-auth.sh
+RUN chmod +x /usr/local/bin/entrypoint-filebrowser.sh /usr/local/bin/entrypoint.sh /usr/local/bin/setup-auth.sh /root/onstart.sh
 
 # Set ownership
 RUN chown -R appuser:appuser /workspace /data /var/log/supervisor
@@ -64,6 +65,6 @@ EXPOSE 7010 7020 8010
 # Set working directory
 WORKDIR /workspace
 
-# Use our entrypoint script
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD []
+# Default CMD - supervisord will be started by onstart.sh when running on Vast.ai
+# For local testing, you can override with: docker run --entrypoint /usr/local/bin/entrypoint.sh
+CMD ["/bin/bash"]

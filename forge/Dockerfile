@@ -3,13 +3,13 @@ FROM ghcr.io/codechips/vastai-base:latest
 # Install nginx and Python dependencies
 RUN apt-get update && \
     apt-get install -y \
-        nginx \
-        apache2-utils \
-        python3.10 \
-        python3-pip \
-        python3.10-venv \
-        libgl1 \
-        libglib2.0-0 && \
+    nginx \
+    apache2-utils \
+    python3.10 \
+    python3-pip \
+    python3.10-venv \
+    libgl1 \
+    libglib2.0-0 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -22,9 +22,9 @@ WORKDIR /forge
 
 # Install PyTorch (will use CUDA on x86_64, CPU on ARM64)
 RUN if [ "$(uname -m)" = "x86_64" ]; then \
-        pip3 install --user torch==2.1.0+cu121 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121; \
+    pip3 install --user torch==2.1.0+cu121 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121; \
     else \
-        pip3 install --user torch==2.0.1 torchvision torchaudio; \
+    pip3 install --user torch==2.0.1 torchvision torchaudio; \
     fi
 
 # Clone Forge UI repository
@@ -45,13 +45,14 @@ COPY config/supervisord/*.conf /etc/supervisor/conf.d/
 COPY scripts/setup-auth.sh /usr/local/bin/
 COPY scripts/start-services.sh /usr/local/bin/
 COPY scripts/entrypoint.sh /usr/local/bin/
+COPY scripts/onstart.sh /root/
 
 # Enable nginx site
 RUN ln -s /etc/nginx/sites-available/forge.conf /etc/nginx/sites-enabled/ && \
     rm -f /etc/nginx/sites-enabled/default
 
 # Make scripts executable
-RUN chmod +x /usr/local/bin/setup-auth.sh /usr/local/bin/start-services.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/setup-auth.sh /usr/local/bin/start-services.sh /usr/local/bin/entrypoint.sh /root/onstart.sh
 
 # Create necessary directories and set permissions
 RUN mkdir -p /var/log/nginx /var/lib/nginx /var/cache/nginx /etc/nginx/conf.d && \
@@ -74,6 +75,6 @@ EXPOSE 8000
 # Set working directory
 WORKDIR /forge
 
-# Use our entrypoint script
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD []
+# Default CMD - supervisord will be started by onstart.sh when running on Vast.ai
+# For local testing, you can override with: docker run --entrypoint /usr/local/bin/entrypoint.sh
+CMD ["/bin/bash"]
