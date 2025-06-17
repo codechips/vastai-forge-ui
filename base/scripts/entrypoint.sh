@@ -52,7 +52,22 @@ setup_git_config() {
     "
 }
 
+# Save environment variables to /etc/environment for persistence
+save_environment() {
+    echo "Saving environment variables..."
+    {
+        echo "# Vastai base environment variables"
+        echo "PATH=\"$PATH\""
+        echo "WORKSPACE=\"$WORKSPACE\""
+        echo "USERNAME=\"${USERNAME:-admin}\""
+        # Don't save PASSWORD for security
+    } > /etc/environment
+}
+
 # Trap signals and forward them to supervisord
 trap 'echo "Received signal, shutting down..."; kill -TERM $supervisord_pid 2>/dev/null || true; wait $supervisord_pid 2>/dev/null || true' TERM INT
+
+# Save environment before starting
+save_environment
 
 main "$@"

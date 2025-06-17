@@ -72,7 +72,23 @@ setup_forge() {
     fi
 }
 
+# Save environment variables to /etc/environment for persistence
+save_environment() {
+    echo "Saving environment variables..."
+    {
+        echo "# Vastai Forge environment variables"
+        echo "PATH=\"$PATH\""
+        echo "WORKSPACE=\"$WORKSPACE\""
+        echo "USERNAME=\"${USERNAME:-admin}\""
+        # Don't save PASSWORD for security
+        echo "PYTHONPATH=\"/forge/venv/lib/python3.10/site-packages\""
+    } > /etc/environment
+}
+
 # Trap signals and forward them to supervisord
 trap 'echo "Received signal, shutting down..."; kill -TERM $supervisord_pid 2>/dev/null || true; wait $supervisord_pid 2>/dev/null || true' TERM INT
+
+# Save environment before starting
+save_environment
 
 main "$@"
