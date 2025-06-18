@@ -43,3 +43,21 @@ file = "diffusion_pytorch_model.fp16.safetensors"
 source = "url"
 url = "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth"
 filename = "RealESRGAN_x4plus.pth"
+
+# CLIP text encoder for FLUX models
+[models.text_encoder.clip_l]
+source = "huggingface"
+repo = "comfyanonymous/flux_text_encoders"
+file = "clip_l.safetensors"
+
+# T5 text encoder for FLUX models (FP8 quantized - smaller size)
+[models.text_encoder.t5xxl_fp8]
+source = "huggingface"
+repo = "comfyanonymous/flux_text_encoders"
+file = "t5xxl_fp8_e4m3fn.safetensors"
+
+# OpenCLIP ViT-L/14 model for advanced CLIP functionality
+[models.text_encoder.openclip_vit_l14]
+source = "huggingface"
+repo = "zer0int/CLIP-GmP-ViT-L-14"
+file = "ViT-L-14-BEST-smooth-GmP-HF-format.safetensors"

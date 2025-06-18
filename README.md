@@ -156,6 +156,24 @@ headers = { "Authorization" = "Bearer token" }  # Optional
 simple-model = "https://example.com/model.safetensors"
 ```
 
+#### 5. CLIP Text Encoders
+```toml
+[models.text_encoder.clip_l]
+source = "huggingface"
+repo = "comfyanonymous/flux_text_encoders"
+file = "clip_l.safetensors"
+
+[models.text_encoder.t5xxl_fp8]
+source = "huggingface"
+repo = "comfyanonymous/flux_text_encoders"
+file = "t5xxl_fp8_e4m3fn.safetensors"
+
+[models.text_encoder.openclip_vit_l14]
+source = "huggingface"
+repo = "zer0int/CLIP-GmP-ViT-L-14"
+file = "ViT-L-14-BEST-smooth-GmP-HF-format.safetensors"
+```
+
 ### Model Categories and Directories
 
 | Category | Directory | Description |
@@ -167,6 +185,8 @@ simple-model = "https://example.com/model.safetensors"
 | `esrgan` | `forge/models/ESRGAN/` | Upscaling models |
 | `embeddings` | `forge/models/embeddings/` | Text embeddings |
 | `hypernetworks` | `forge/models/hypernetworks/` | Hypernetwork models |
+| `text_encoder` | `forge/models/text_encoder/` | CLIP and text encoder models |
+| `clip` | `forge/models/text_encoder/` | Alias for text_encoder |
 
 ### Example Configurations
 

@@ -249,6 +249,8 @@ class ProvisioningSystem:
             "esrgan": "ESRGAN",
             "embeddings": "embeddings",
             "hypernetworks": "hypernetworks",
+            "text_encoder": "text_encoder",
+            "clip": "text_encoder",  # Alias for text_encoder
         }
         return category_mapping.get(category, category)
 

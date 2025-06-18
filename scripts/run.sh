@@ -107,6 +107,7 @@ function setup_workspace() {
     mkdir -p /workspace/forge/models/hypernetworks
     mkdir -p /workspace/forge/models/ControlNet
     mkdir -p /workspace/forge/models/ESRGAN
+    mkdir -p /workspace/forge/models/text_encoder
     mkdir -p /workspace/forge/outputs
 
     # Link outputs directory only (models handled by --models-dir)
