@@ -27,7 +27,7 @@ function start_forge() {
     source .venv/bin/activate
 
     # Default Forge arguments
-    DEFAULT_ARGS="--listen --port 8010"
+    DEFAULT_ARGS="--listen --port 8010 --models-dir ${WORKSPACE}/models"
 
     # Add Gradio authentication using environment variables
     if [[ ${USERNAME} ]] && [[ ${PASSWORD} ]]; then
@@ -109,17 +109,8 @@ function setup_workspace() {
     mkdir -p /workspace/models/ESRGAN
     mkdir -p /workspace/outputs
 
-    # Create symlinks from Forge to workspace if not exists
+    # Link outputs directory only (models handled by --models-dir)
     cd /opt/forge
-    for dir in models/Stable-diffusion models/VAE models/Lora embeddings models/hypernetworks models/ControlNet models/ESRGAN; do
-        if [ ! -L "$dir" ] && [ -d "/workspace/$dir" ]; then
-            rm -rf "$dir" 2>/dev/null || true
-            ln -s "/workspace/$dir" "$dir"
-            echo "Linked $dir to workspace"
-        fi
-    done
-
-    # Link outputs directory
     if [ ! -L "outputs" ]; then
         rm -rf outputs 2>/dev/null || true
         ln -s /workspace/outputs outputs
@@ -162,8 +153,6 @@ echo "Starting VastAI Forge container..."
 # Setup workspace
 setup_workspace
 
-# Run provisioning if enabled
-run_provisioning
 
 # Start services
 start_filebrowser
@@ -173,6 +162,9 @@ start_logdy
 
 # Show information
 show_info
+
+# Run provisioning if enabled
+run_provisioning
 
 # Keep container running
 echo ""
