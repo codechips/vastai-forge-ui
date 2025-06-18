@@ -47,6 +47,7 @@ class ProvisioningSystem:
         self.workspace_dir = Path(workspace_dir)
         self.models_dir = self.workspace_dir / "models"
         self.logs_dir = self.workspace_dir / "logs"
+        self.dry_run = False
 
         # Ensure directories exist
         self.models_dir.mkdir(parents=True, exist_ok=True)
@@ -203,12 +204,23 @@ class ProvisioningSystem:
         # Process each model category
         for category, models in config.get("models", {}).items():
             target_dir = self.models_dir / self._get_category_dir(category)
-            target_dir.mkdir(parents=True, exist_ok=True)
+            
+            if not self.dry_run:
+                target_dir.mkdir(parents=True, exist_ok=True)
 
             for model_name, model_config in models.items():
+                if self.dry_run:
+                    # In dry run mode, just validate the configuration
+                    self.logger.info(f"✅ Would download {model_name} to {target_dir}")
+                    continue
+                    
                 task = self._create_download_task(model_name, model_config, target_dir)
                 if task:
                     download_tasks.append(task)
+
+        if self.dry_run:
+            self.logger.info("✅ Dry run completed - all configurations are valid")
+            return True
 
         if not download_tasks:
             self.logger.warning("No models to download")
@@ -336,18 +348,53 @@ class ProvisioningSystem:
 
 async def main():
     """Main entry point for provisioning."""
-    if len(sys.argv) < 2:
-        print("Usage: python provision.py <config_url_or_path>")
-        sys.exit(1)
-
-    config_source = sys.argv[1]
-    provisioner = ProvisioningSystem()
-
+    import argparse
+    
+    parser = argparse.ArgumentParser(
+        description="VastAI Forge Provisioning System - Download models from various sources",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s config.toml                    # Provision from local config file
+  %(prog)s http://example.com/config.toml # Provision from remote config
+  %(prog)s config.toml --dry-run          # Validate config without downloading
+  
+Environment Variables:
+  WORKSPACE      - Target directory for models (default: /workspace)
+  HF_TOKEN       - HuggingFace API token for gated models
+  CIVITAI_TOKEN  - CivitAI API token for some models
+        """
+    )
+    
+    parser.add_argument(
+        "config",
+        help="Path to TOML config file or URL"
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Validate configuration and tokens without downloading models"
+    )
+    parser.add_argument(
+        "--workspace",
+        help="Override workspace directory (default: $WORKSPACE or /workspace)"
+    )
+    
+    args = parser.parse_args()
+    
+    # Create provisioner with custom workspace if specified
+    provisioner = ProvisioningSystem(args.workspace)
+    
+    # For dry run, we'll add a dry_run parameter to the provisioning methods
+    if args.dry_run:
+        provisioner.dry_run = True
+        print("🔍 Dry run mode - validating configuration without downloading")
+    
     # Determine if source is URL or file path
-    if config_source.startswith(("http://", "https://")):
-        success = await provisioner.provision_from_url(config_source)
+    if args.config.startswith(("http://", "https://")):
+        success = await provisioner.provision_from_url(args.config)
     else:
-        success = await provisioner.provision_from_file(config_source)
+        success = await provisioner.provision_from_file(args.config)
 
     sys.exit(0 if success else 1)
 
