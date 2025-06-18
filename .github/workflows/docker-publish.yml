@@ -5,9 +5,8 @@ name: Docker Build and Publish
 
 on:
   push:
-    branches: [ main, feature/* ]
-  pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -49,7 +48,7 @@ jobs:
         context: .
         file: ./Dockerfile
         platforms: linux/amd64,linux/arm64
-        push: true
+        push: ${{ github.ref == 'refs/heads/main' }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         build-args: |
