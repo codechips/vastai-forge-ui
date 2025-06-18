@@ -160,13 +160,13 @@ simple-model = "https://example.com/model.safetensors"
 
 | Category | Directory | Description |
 |----------|-----------|-------------|
-| `checkpoints` | `models/Stable-diffusion/` | Main model files |
-| `lora` | `models/Lora/` | LoRA adaptation files |
-| `vae` | `models/VAE/` | Variational Auto-Encoder models |
-| `controlnet` | `models/ControlNet/` | ControlNet models |
-| `esrgan` | `models/ESRGAN/` | Upscaling models |
-| `embeddings` | `models/embeddings/` | Text embeddings |
-| `hypernetworks` | `models/hypernetworks/` | Hypernetwork models |
+| `checkpoints` | `forge/models/Stable-diffusion/` | Main model files |
+| `lora` | `forge/models/Lora/` | LoRA adaptation files |
+| `vae` | `forge/models/VAE/` | Variational Auto-Encoder models |
+| `controlnet` | `forge/models/ControlNet/` | ControlNet models |
+| `esrgan` | `forge/models/ESRGAN/` | Upscaling models |
+| `embeddings` | `forge/models/embeddings/` | Text embeddings |
+| `hypernetworks` | `forge/models/hypernetworks/` | Hypernetwork models |
 
 ### Example Configurations
 

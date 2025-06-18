@@ -45,7 +45,7 @@ class ProvisioningSystem:
         if workspace_dir is None:
             workspace_dir = os.environ.get("WORKSPACE", "/workspace")
         self.workspace_dir = Path(workspace_dir)
-        self.models_dir = self.workspace_dir / "models"
+        self.models_dir = self.workspace_dir / "forge" / "models"
         self.logs_dir = self.workspace_dir / "logs"
         self.dry_run = False
 

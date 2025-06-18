@@ -27,7 +27,7 @@ function start_forge() {
     source .venv/bin/activate
 
     # Default Forge arguments
-    DEFAULT_ARGS="--listen --port 8010 --models-dir ${WORKSPACE}/models"
+    DEFAULT_ARGS="--listen --port 8010 --models-dir ${WORKSPACE}/forge/models"
 
     # Add Gradio authentication using environment variables
     if [[ ${USERNAME} ]] && [[ ${PASSWORD} ]]; then
@@ -100,20 +100,20 @@ function setup_workspace() {
     mkdir -p /workspace/logs
 
     # Create model directories if they don't exist
-    mkdir -p /workspace/models/Stable-diffusion
-    mkdir -p /workspace/models/VAE
-    mkdir -p /workspace/models/Lora
-    mkdir -p /workspace/models/embeddings
-    mkdir -p /workspace/models/hypernetworks
-    mkdir -p /workspace/models/ControlNet
-    mkdir -p /workspace/models/ESRGAN
-    mkdir -p /workspace/outputs
+    mkdir -p /workspace/forge/models/Stable-diffusion
+    mkdir -p /workspace/forge/models/VAE
+    mkdir -p /workspace/forge/models/Lora
+    mkdir -p /workspace/forge/models/embeddings
+    mkdir -p /workspace/forge/models/hypernetworks
+    mkdir -p /workspace/forge/models/ControlNet
+    mkdir -p /workspace/forge/models/ESRGAN
+    mkdir -p /workspace/forge/outputs
 
     # Link outputs directory only (models handled by --models-dir)
     cd /opt/forge
     if [ ! -L "outputs" ]; then
         rm -rf outputs 2>/dev/null || true
-        ln -s /workspace/outputs outputs
+        ln -s /workspace/forge/outputs outputs
         echo "Linked outputs to workspace"
     fi
 }
