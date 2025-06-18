@@ -1,6 +1,3 @@
-# VastAI Forge Provisioning Configuration Example
-# This file demonstrates how to configure model downloads from multiple sources
-
 # HuggingFace models
 [models.checkpoints.sdxl-base]
 source = "huggingface"
@@ -9,8 +6,8 @@ file = "sd_xl_base_1.0.safetensors"
 
 [models.checkpoints.sdxl-refiner]
 source = "huggingface"
-repo = "stabilityai/stable-diffusion-xl-refiner-1.0"
-file = "sd_xl_refiner_1.0.safetensors"
+repo = "stabilityai/stable-diffusion-xl-refiner-0.9"
+file = "sd_xl_refiner_0.9.safetensors"
 
 # Gated model (requires HF token and TOS acceptance)
 [models.checkpoints.flux-dev]
@@ -21,30 +18,21 @@ gated = true
 
 # CivitAI model
 [models.checkpoints.realistic-vision]
+# https://civitai.com/models/4201/realistic-vision-v60-b1
 source = "civitai"
-model_id = "130072"
+model_id = "501240"
 filename = "realisticVisionV60B1_v51VAE.safetensors"
 
-# Direct URL examples
-[models.checkpoints.custom-model]
-source = "url"
-url = "https://example.com/models/custom-model.safetensors"
-filename = "custom-model.safetensors"
-
-# Google Drive URL (will be automatically converted to direct download)
-[models.checkpoints.gdrive-model]
-source = "url"
-url = "https://drive.google.com/file/d/1ABC123DEF456/view"
-filename = "gdrive-model.safetensors"
-
 # LoRA models
-[models.lora.style-lora]
+[models.lora.rembrandt]
+# https://civitai.com/models/280454/rembrandt-low-key-lighting-style-xl-sd15-f1d-illu-pony
 source = "civitai"
-model_id = "87153"
+model_id = "804774"
 
-# Simple URL format
-[models.lora]
-another-lora = "https://example.com/loras/style.safetensors"
+[models.lora.split-lighting]
+# https://civitai.com/models/381965/split-lighting-style-shadow-light-xl-f1d-illu-pony
+source = "civitai"
+model_id = "1374634"
 
 # VAE models
 [models.vae.sdxl-vae]
@@ -63,10 +51,3 @@ file = "diffusers_xl_canny_mid.safetensors"
 source = "url"
 url = "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth"
 filename = "RealESRGAN_x4plus.pth"
-
-# S3 example with authentication
-[models.esrgan.s3-model]
-source = "url"
-url = "https://my-bucket.s3.amazonaws.com/models/upscaler.pth"
-auth_header = "Bearer ${S3_TOKEN}"
-filename = "s3-upscaler.pth"
