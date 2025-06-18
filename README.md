@@ -1,21 +1,17 @@
-# Vast.ai Forge UI Docker Images
+# Vast.ai Forge UI Docker Image
 
-Multi-stage Docker setup for running Stable Diffusion WebUI Forge on Vast.ai with integrated web-based management tools.
+Simplified single Docker image for running Stable Diffusion WebUI Forge on Vast.ai with integrated web-based management tools and automated model provisioning.
 
-## Architecture
+## Features
 
-### Base Image (`ghcr.io/codechips/vastai-base`)
-Foundation image with management tools:
-- **Filebrowser** (port 7000): File management interface
-- **ttyd** (port 7010): Web-based terminal
-- **logdy** (port 7020): Log viewer
-- **Supervisord**: Process management
-
-### Forge Image (`ghcr.io/codechips/vastai-forge`)
-Extends base image with:
-- **Stable Diffusion WebUI Forge** (port 8000): AI image generation interface
-- **Nginx reverse proxy**: Authentication for Forge UI
-- **PyTorch 2.3.1 + CUDA 12.1**: Optimized for stability
+**All-in-one Docker image** with:
+- **Stable Diffusion WebUI Forge** (port 8010): AI image generation interface
+- **Filebrowser** (port 7010): File management interface
+- **ttyd** (port 7020): Web-based terminal (writable)
+- **logdy** (port 7030): Log viewer
+- **Automated Model Provisioning**: Download models from HuggingFace, CivitAI, and direct URLs
+- **PyTorch 2.1.0 + CUDA 12.1**: Optimized for stability
+- **Simple process management**: No complex orchestration
 
 ## Quick Start
 
@@ -23,47 +19,209 @@ Extends base image with:
 
 1. Create a new instance with:
    ```
-   Docker Image: ghcr.io/codechips/vastai-forge:latest
+   Docker Image: ghcr.io/codechips/vastai-forge-ui:latest
    ```
 
 2. Configure environment variables:
    ```bash
-   -e USERNAME=your_username -e PASSWORD=your_password -e OPEN_BUTTON_PORT=8000
+   -e USERNAME=your_username -e PASSWORD=your_password -e OPEN_BUTTON_PORT=8010
+   ```
+
+   **Optional model provisioning** (see [Model Provisioning](#model-provisioning) section):
+   ```bash
+   -e PROVISION_URL=https://your-server.com/config.toml
+   -e HF_TOKEN=hf_your_huggingface_token
+   -e CIVITAI_TOKEN=your_civitai_token
    ```
 
 3. Map ports:
    ```bash
-   -p 8000:8000 -p 7000:7000 -p 7010:7010 -p 7020:7020
+   -p 8010:8010 -p 7010:7010 -p 7020:7020 -p 7030:7030
    ```
 
 4. Launch with "Entrypoint" mode for best compatibility
 
 ### Access Your Services
 
-- **Forge UI**: Port 8000 (main interface, protected with auth)
-- **File Manager**: Port 7000 (manage models and outputs)
-- **Terminal**: Port 7010 (command line access)
-- **Logs**: Port 7020 (monitor all application logs including Forge UI)
+- **Forge UI**: Port 8010 (main interface, protected with Gradio auth)
+- **File Manager**: Port 7010 (manage models and outputs, protected with auth)
+- **Terminal**: Port 7020 (command line access, writable, protected with auth)
+- **Logs**: Port 7030 (monitor all application logs)
 
 ## Default Credentials
 
 - Username: `admin`
 - Password: `admin`
 
+## Model Provisioning
+
+The container includes an automated model provisioning system that can download models from multiple sources during startup.
+
+### Environment Variables
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `PROVISION_URL` | URL to TOML configuration file for automatic provisioning | None | No |
+| `WORKSPACE` | Target directory for models and data | `/workspace` | No |
+| `HF_TOKEN` | HuggingFace API token for gated models | None | No |
+| `CIVITAI_TOKEN` | CivitAI API token for some models | None | No |
+| `USERNAME` | Authentication username for all services | `admin` | No |
+| `PASSWORD` | Authentication password for all services | `admin` | No |
+| `OPEN_BUTTON_PORT` | Port for Vast.ai "Open" button | `8010` | No |
+| `FORGE_ARGS` | Additional arguments for Forge UI | Empty | No |
+
+### Quick Provisioning Setup
+
+1. **Create a TOML configuration file** (see [examples](examples/)):
+   ```toml
+   # Basic configuration example
+   [models.checkpoints.sdxl-base]
+   source = "huggingface"
+   repo = "stabilityai/stable-diffusion-xl-base-1.0"
+   file = "sd_xl_base_1.0.safetensors"
+   
+   [models.lora.detail-tweaker]
+   source = "civitai"
+   model_id = "58390"
+   ```
+
+2. **Host the configuration file** (GitHub, S3, HTTP server, etc.)
+
+3. **Launch container with provisioning**:
+   ```bash
+   docker run -d \
+     -p 8010:8010 -p 7010:7010 -p 7020:7020 -p 7030:7030 \
+     -e USERNAME=admin -e PASSWORD=admin \
+     -e PROVISION_URL=https://your-server.com/models.toml \
+     -e HF_TOKEN=hf_your_token_here \
+     -e CIVITAI_TOKEN=your_civitai_token \
+     ghcr.io/codechips/vastai-forge-ui:latest
+   ```
+
+### Manual Provisioning
+
+You can also run the provisioning script manually from inside the container:
+
+```bash
+# Access container terminal (via ttyd web interface or docker exec)
+cd /opt/bin
+
+# Provision from local file
+./provision/provision.py /workspace/config.toml
+
+# Provision from URL
+./provision/provision.py https://example.com/config.toml
+
+# Dry run (validate without downloading)
+./provision/provision.py config.toml --dry-run
+
+# Override workspace directory
+./provision/provision.py config.toml --workspace /custom/path
+
+# Get help
+./provision/provision.py --help
+```
+
+### Supported Model Sources
+
+#### 1. HuggingFace Hub
+```toml
+[models.checkpoints.model-name]
+source = "huggingface"
+repo = "username/repository"
+file = "model.safetensors"
+gated = false  # Set to true for gated models (requires HF_TOKEN)
+```
+
+#### 2. CivitAI
+```toml
+[models.lora.model-name]
+source = "civitai"
+model_id = "12345"
+filename = "custom_name.safetensors"  # Optional
+```
+
+#### 3. Direct URLs
+```toml
+[models.vae.model-name]
+source = "url"
+url = "https://example.com/model.safetensors"
+filename = "model.safetensors"
+headers = { "Authorization" = "Bearer token" }  # Optional
+```
+
+#### 4. Simple URL Format
+```toml
+[models.lora]
+simple-model = "https://example.com/model.safetensors"
+```
+
+### Model Categories and Directories
+
+| Category | Directory | Description |
+|----------|-----------|-------------|
+| `checkpoints` | `models/Stable-diffusion/` | Main model files |
+| `lora` | `models/Lora/` | LoRA adaptation files |
+| `vae` | `models/VAE/` | Variational Auto-Encoder models |
+| `controlnet` | `models/ControlNet/` | ControlNet models |
+| `esrgan` | `models/ESRGAN/` | Upscaling models |
+| `embeddings` | `models/embeddings/` | Text embeddings |
+| `hypernetworks` | `models/hypernetworks/` | Hypernetwork models |
+
+### Example Configurations
+
+- [**Minimal Example**](examples/test-provision-minimal.toml): Small test files for validation
+- [**Full Example**](examples/test-provision-full.toml): Comprehensive configuration with all features
+- [**Main Example**](examples/provision-config.toml): Production-ready configuration template
+
+### Local Testing
+
+Test the provisioning system locally:
+
+```bash
+# Run the test setup script
+./test_provision_local.sh
+
+# This creates a test environment at /tmp/vastai-forge-test
+# and provides commands to test different scenarios
+```
+
+### Troubleshooting
+
+**Common Issues:**
+
+1. **Authentication Errors**: Ensure `HF_TOKEN` and `CIVITAI_TOKEN` are set correctly
+2. **Gated Models**: Visit the HuggingFace model page and accept terms of service
+3. **Network Issues**: Check if URLs are accessible and not blocked
+4. **Disk Space**: Ensure adequate storage for model downloads
+5. **TOML Syntax**: Validate configuration with `--dry-run` option
+
+**Logs**: Check provisioning logs at `/workspace/logs/provision.log` or via the logdy interface (port 7030).
+
 ## Directory Structure
 
 ```
 vastai-forge-ui/
-├── base/                    # Base image with management tools
-│   ├── Dockerfile
-│   ├── etc/supervisor/      # Process management configs
-│   └── usr/local/bin/       # Scripts
-├── forge/                   # Forge UI image
-│   ├── Dockerfile
-│   ├── config/              # Nginx and supervisord configs
-│   └── scripts/             # Setup scripts
-├── docs/                    # Documentation
-└── .github/workflows/       # CI/CD pipeline
+├── Dockerfile                      # Single image with all components
+├── scripts/
+│   ├── run.sh                     # Simple process manager
+│   └── provision/                 # Model provisioning system
+│       ├── provision.py           # Main provisioning script
+│       ├── config/                # Configuration parsing
+│       ├── downloaders/           # Download implementations
+│       ├── utils/                 # Utilities and logging
+│       └── validators/            # Token validation
+├── config/
+│   ├── filebrowser/               # Filebrowser configuration
+│   └── forge/                     # Forge configuration (if any)
+├── examples/                      # Provisioning configuration examples
+│   ├── provision-config.toml      # Production template
+│   ├── test-provision-minimal.toml # Minimal test config
+│   └── test-provision-full.toml   # Full feature example
+├── docs/                          # Documentation
+├── test_provision_local.sh        # Local testing script
+├── .github/workflows/             # CI/CD workflows
+└── .mise.toml                     # Task runner configuration
 ```
 
 ## Local Development
@@ -78,19 +236,21 @@ vastai-forge-ui/
 mise run dev
 
 # Or step by step:
-mise run build    # Build both images
+mise run build    # Build image
 mise run test     # Start test container
 mise run status   # Check service status
+
+# Test provisioning system locally
+./test_provision_local.sh
 ```
 
 ### Available Mise Tasks
 
 #### Building
 ```bash
-mise run build-base     # Build base image only
-mise run build-forge    # Build forge image (depends on base)
-mise run build          # Build both images
+mise run build          # Build image
 mise run build-no-cache # Build without cache (for debugging)
+mise run build-prod     # Build production image for linux/amd64
 ```
 
 #### Testing
@@ -112,54 +272,51 @@ mise run clean          # Clean up everything
 ### Manual Docker Commands
 If you prefer not to use Mise:
 ```bash
-# Build images
-cd base && docker build -t vastai-base:local .
-cd ../forge && docker build -t vastai-forge:local .
+# Build image
+docker build -t vastai-forge:local .
 
 # Run container
 docker run -d --name vastai-test \
-  -p 8000:8000 -p 7000:7000 -p 7010:7010 -p 7020:7020 \
+  -p 8010:8010 -p 7010:7010 -p 7020:7020 -p 7030:7030 \
   -e USERNAME=admin -e PASSWORD=admin \
   vastai-forge:local
 ```
 
 ## Log Monitoring
 
-The logdy interface (port 7020) provides real-time monitoring of:
+The logdy interface (port 7030) provides real-time monitoring of:
 
-### Base Image Logs
+- **Forge UI**: Complete Stable Diffusion WebUI Forge logs including model loading, generation progress, and errors
 - **Filebrowser**: Application logs and access logs
 - **ttyd**: Terminal session logs
-- **Supervisord**: Process management logs
+- **Logdy**: Log viewer service logs
 
-### Forge Image Additional Logs
-- **Forge UI**: Complete Stable Diffusion WebUI Forge logs including model loading, generation progress, and errors
-- **Nginx**: Access and error logs for the authentication proxy
-- **System**: All supervisord managed service logs
-
-All logs are automatically rotated and easily searchable through the logdy web interface.
+All logs are easily searchable through the logdy web interface.
 
 ## Security Features
 
-- Unified authentication across all services
-- Basic authentication for Forge UI via nginx
-- Native authentication for file browser and terminal
-- Configurable credentials via environment variables
+- **Unified authentication** across all services:
+  - Forge UI: Gradio built-in authentication
+  - Filebrowser: Native authentication 
+  - ttyd terminal: Basic authentication
+- **Configurable credentials** via environment variables (USERNAME/PASSWORD)
+- **Simple, secure access** to all management tools
 
 ## Compatibility
 
 - **CUDA**: 12.1 (with 12.2 base)
-- **PyTorch**: 2.0.1 (with CUDA 12.1 support)
-- **Python**: 3.10
+- **PyTorch**: 2.1.0 (with CUDA 12.1 support)  
+- **Python**: 3.10 (Ubuntu 22.04 default)
 - **GPU**: NVIDIA GPUs with CUDA support
 - **Platform**: Vast.ai, local Docker environments
+- **Architecture**: x86_64 and ARM64
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch  
 3. Make your changes
-4. Test with both base and forge images
+4. Test with `mise run dev`
 5. Submit a pull request
 
 ## License

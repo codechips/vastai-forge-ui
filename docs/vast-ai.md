@@ -86,13 +86,13 @@ Given these constraints, our Docker images should:
 
 ### Base Image: `ghcr.io/codechips/vastai-base`
 **Ports (7xxx range):**
-- **7000**: Filebrowser (file management with native auth)
-- **7010**: ttyd (terminal access with credentials)
-- **7020**: logdy (log viewer, read-only)
+- **7010**: Filebrowser (file management with native auth)
+- **7020**: ttyd (terminal access with credentials)
+- **7030**: logdy (log viewer, read-only)
 
 ### Forge Image: `ghcr.io/codechips/vastai-forge`
 **Inherits base services plus:**
-- **8000**: Forge UI (protected with nginx basic auth) - `OPEN_BUTTON_PORT`
+- **8010**: Forge UI (protected with nginx basic auth) - `OPEN_BUTTON_PORT`
 
 ### Authentication
 All services use unified credentials:
@@ -102,7 +102,7 @@ All services use unified credentials:
 ### Vast.ai Template Configuration
 ```
 Docker Image: ghcr.io/codechips/vastai-forge:latest
-Port Mappings: -p 8000:8000 -p 7000:7000 -p 7010:7010 -p 7020:7020
-Environment: -e USERNAME=myuser -e PASSWORD=mypass -e OPEN_BUTTON_PORT=8000
+Port Mappings: -p 8010:8010 -p 7010:7010 -p 7020:7020 -p 7030:7030
+Environment: -e USERNAME=myuser -e PASSWORD=mypass -e OPEN_BUTTON_PORT=8010
 Launch Mode: Entrypoint (recommended for multi-service setup)
 ```
