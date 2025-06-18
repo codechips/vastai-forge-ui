@@ -40,7 +40,7 @@ from config.parser import ConfigParser
 class ProvisioningSystem:
     """Main provisioning orchestrator."""
 
-    def __init__(self, workspace_dir: str = None):
+    def __init__(self, workspace_dir: str = ""):
         # Use environment variable or default
         if workspace_dir is None:
             workspace_dir = os.environ.get("WORKSPACE", "/workspace")
@@ -204,7 +204,7 @@ class ProvisioningSystem:
         # Process each model category
         for category, models in config.get("models", {}).items():
             target_dir = self.models_dir / self._get_category_dir(category)
-            
+
             if not self.dry_run:
                 target_dir.mkdir(parents=True, exist_ok=True)
 
@@ -213,7 +213,7 @@ class ProvisioningSystem:
                     # In dry run mode, just validate the configuration
                     self.logger.info(f"✅ Would download {model_name} to {target_dir}")
                     continue
-                    
+
                 task = self._create_download_task(model_name, model_config, target_dir)
                 if task:
                     download_tasks.append(task)
@@ -349,7 +349,7 @@ class ProvisioningSystem:
 async def main():
     """Main entry point for provisioning."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(
         description="VastAI Forge Provisioning System - Download models from various sources",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -358,38 +358,35 @@ Examples:
   %(prog)s config.toml                    # Provision from local config file
   %(prog)s http://example.com/config.toml # Provision from remote config
   %(prog)s config.toml --dry-run          # Validate config without downloading
-  
+
 Environment Variables:
   WORKSPACE      - Target directory for models (default: /workspace)
   HF_TOKEN       - HuggingFace API token for gated models
   CIVITAI_TOKEN  - CivitAI API token for some models
-        """
+        """,
     )
-    
-    parser.add_argument(
-        "config",
-        help="Path to TOML config file or URL"
-    )
+
+    parser.add_argument("config", help="Path to TOML config file or URL")
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Validate configuration and tokens without downloading models"
+        help="Validate configuration and tokens without downloading models",
     )
     parser.add_argument(
         "--workspace",
-        help="Override workspace directory (default: $WORKSPACE or /workspace)"
+        help="Override workspace directory (default: $WORKSPACE or /workspace)",
     )
-    
+
     args = parser.parse_args()
-    
+
     # Create provisioner with custom workspace if specified
     provisioner = ProvisioningSystem(args.workspace)
-    
+
     # For dry run, we'll add a dry_run parameter to the provisioning methods
     if args.dry_run:
         provisioner.dry_run = True
         print("🔍 Dry run mode - validating configuration without downloading")
-    
+
     # Determine if source is URL or file path
     if args.config.startswith(("http://", "https://")):
         success = await provisioner.provision_from_url(args.config)
