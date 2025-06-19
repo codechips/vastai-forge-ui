@@ -87,14 +87,14 @@ The container includes an automated model provisioning system that can download 
    model_id = "58390"
    ```
 
-2. **Host the configuration file** (GitHub, S3, HTTP server, etc.)
+2. **Host the configuration file** (GitHub, Google Drive, S3, HTTP server, etc.)
 
 3. **Launch container with provisioning**:
    ```bash
    docker run -d \
      -p 8010:8010 -p 7010:7010 -p 7020:7020 -p 7030:7030 \
      -e USERNAME=admin -e PASSWORD=admin \
-     -e PROVISION_URL=https://your-server.com/models.toml \
+     -e PROVISION_URL=https://drive.google.com/file/d/YOUR_FILE_ID/view \
      -e HF_TOKEN=hf_your_token_here \
      -e CIVITAI_TOKEN=your_civitai_token \
      ghcr.io/codechips/vastai-forge-ui:latest
@@ -143,7 +143,7 @@ model_id = "12345"
 filename = "custom_name.safetensors"  # Optional
 ```
 
-#### 3. Direct URLs
+#### 3. Direct URLs (including Google Drive)
 ```toml
 [models.vae.model-name]
 source = "url"
@@ -152,13 +152,34 @@ filename = "model.safetensors"
 headers = { "Authorization" = "Bearer token" }  # Optional
 ```
 
-#### 4. Simple URL Format
+#### 4. Google Drive URLs
+**Supported URL formats:**
+```toml
+# Google Drive sharing link
+[models.checkpoints.gdrive-model]
+source = "url"
+url = "https://drive.google.com/file/d/1ABC123DEF456/view?usp=sharing"
+filename = "custom-name.safetensors"
+
+# Direct Google Drive download (auto-converted)
+[models.lora.another-model]  
+source = "url"
+url = "https://drive.google.com/uc?id=1ABC123DEF456"
+```
+
+**Features:**
+- **Automatic conversion** from sharing links to direct download URLs
+- **Virus scan bypass** - handles Google's "can't scan large files" warnings
+- **Works for both** model files and provision config files (`PROVISION_URL`)
+- **Example provision config**: `PROVISION_URL=https://drive.google.com/file/d/YOUR_ID/view`
+
+#### 5. Simple URL Format
 ```toml
 [models.lora]
 simple-model = "https://example.com/model.safetensors"
 ```
 
-#### 5. CLIP Text Encoders
+#### 6. CLIP Text Encoders
 ```toml
 [models.text_encoder.clip_l]
 source = "huggingface"
@@ -176,7 +197,7 @@ repo = "zer0int/CLIP-GmP-ViT-L-14"
 file = "ViT-L-14-BEST-smooth-GmP-HF-format.safetensors"
 ```
 
-#### 6. FLUX VAE
+#### 7. FLUX VAE
 ```toml
 # Required for FLUX models
 [models.vae.flux-vae]

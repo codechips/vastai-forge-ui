@@ -11,12 +11,15 @@ from pathlib import Path
 from typing import Dict, Optional
 from urllib.parse import urlparse, parse_qs
 
+from ..utils.urls import URLProcessor
+
 
 class DirectURLDownloader:
     """Downloads models from direct URLs (Google Drive, S3, etc.)."""
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
+        self.url_processor = URLProcessor()
     
     async def download(
         self, 
@@ -45,7 +48,7 @@ class DirectURLDownloader:
             self.logger.info(f"    Target: {target_dir}")
             
             # Process special URLs (Google Drive, etc.)
-            processed_url = self._process_url(url)
+            processed_url = self.url_processor.process_url(url)
             
             # Determine filename if not provided
             if not filename:
@@ -73,29 +76,6 @@ class DirectURLDownloader:
             self.logger.error(f"❌ Direct URL download failed for {model_name}: {e}")
             return False
     
-    def _process_url(self, url: str) -> str:
-        """Process special URLs (Google Drive, etc.) to get direct download links."""
-        # Google Drive file ID extraction and conversion
-        google_drive_patterns = [
-            r'drive\.google\.com/file/d/([a-zA-Z0-9_-]+)',
-            r'drive\.google\.com/uc\?id=([a-zA-Z0-9_-]+)',
-            r'docs\.google\.com/uc\?id=([a-zA-Z0-9_-]+)'
-        ]
-        
-        for pattern in google_drive_patterns:
-            match = re.search(pattern, url)
-            if match:
-                file_id = match.group(1)
-                direct_url = f"https://drive.google.com/uc?export=download&id={file_id}"
-                self.logger.info(f"Converted Google Drive URL to direct download")
-                return direct_url
-        
-        # Handle Google Drive URLs that are already in direct format
-        if 'drive.google.com/uc' in url and 'export=download' in url:
-            return url
-        
-        # For other URLs, return as-is
-        return url
     
     async def _get_filename(self, url: str, headers: Dict[str, str]) -> Optional[str]:
         """Attempt to get filename from URL or headers."""
@@ -213,21 +193,12 @@ class DirectURLDownloader:
     
     def is_google_drive_url(self, url: str) -> bool:
         """Check if URL is a Google Drive URL."""
-        return any(domain in url for domain in ['drive.google.com', 'docs.google.com'])
+        return self.url_processor.is_google_drive_url(url)
     
     def is_s3_url(self, url: str) -> bool:
         """Check if URL is an S3 URL."""
-        return any(pattern in url for pattern in ['amazonaws.com', 's3.', '.s3-'])
+        return self.url_processor.is_s3_url(url)
     
     def get_url_info(self, url: str) -> Dict[str, str]:
         """Get information about the URL source."""
-        info = {'type': 'generic'}
-        
-        if self.is_google_drive_url(url):
-            info['type'] = 'google_drive'
-        elif self.is_s3_url(url):
-            info['type'] = 's3'
-        elif 'github.com' in url:
-            info['type'] = 'github'
-        
-        return info
+        return self.url_processor.get_url_info(url)

@@ -9,6 +9,9 @@ from typing import Any, Dict
 
 import aiohttp
 
+# Add URL processing utilities
+from ..utils.urls import URLProcessor
+
 # Handle tomllib import for different Python versions
 if sys.version_info >= (3, 11):
     import tomllib
@@ -26,6 +29,7 @@ class ConfigParser:
 
     def __init__(self):
         self.logger = logging.getLogger(__name__)
+        self.url_processor = URLProcessor()
 
     async def fetch_and_parse(self, config_url: str) -> Dict[str, Any]:
         """
@@ -39,15 +43,32 @@ class ConfigParser:
         """
         try:
             self.logger.info(f"Fetching configuration from: {config_url}")
+            
+            # Process URL (convert Google Drive sharing links to direct download)
+            processed_url = self.url_processor.process_url(config_url)
+            if processed_url != config_url:
+                self.logger.info(f"Processed URL for direct access: {processed_url}")
 
             async with aiohttp.ClientSession() as session:
-                async with session.get(config_url) as response:
+                async with session.get(processed_url) as response:
                     if response.status != 200:
                         raise Exception(
                             f"Failed to fetch config: HTTP {response.status}"
                         )
 
                     content = await response.text()
+                    
+                    # Handle Google Drive virus scan warning
+                    if 'drive.google.com' in processed_url and 'Google Drive - Virus scan warning' in content:
+                        import re
+                        # Extract the confirm download URL
+                        confirm_match = re.search(r'href="(/uc\?export=download[^"]*)"', content)
+                        if confirm_match:
+                            new_url = 'https://drive.google.com' + confirm_match.group(1).replace('&amp;', '&')
+                            self.logger.info("Handling Google Drive virus scan warning for config")
+                            return await self.fetch_and_parse(new_url)
+                        else:
+                            raise Exception("Google Drive virus scan warning detected but couldn't find bypass URL")
 
             # Parse TOML content
             config = tomllib.loads(content)
