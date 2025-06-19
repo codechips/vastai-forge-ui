@@ -25,6 +25,8 @@ RUN apt-get update && \
     libgl1 \
     libglib2.0-0 \
     libtcmalloc-minimal4 \
+    bc \
+    nginx-light \
     tmux \
     nano \
     vim \
@@ -105,13 +107,14 @@ RUN uv venv --seed --python 3.10 .venv && \
 # Copy configuration files and scripts (frequently changing layer)
 COPY config/forge/ /etc/forge/
 COPY config/filebrowser/filebrowser.json /root/.filebrowser.json
-COPY scripts/run.sh /opt/bin/run.sh
+COPY scripts/start.sh /opt/bin/start.sh
+COPY scripts/services/ /opt/bin/services/
 COPY scripts/provision/ /opt/bin/provision/
 
 # Configure filebrowser, set permissions, and final cleanup
 # hadolint ignore=SC2015
 RUN mkdir -p /opt/bin && \
-    chmod +x /opt/bin/run.sh /opt/bin/provision/provision.py && \
+    chmod +x /opt/bin/start.sh /opt/bin/services/*.sh /opt/bin/provision/provision.py && \
     date -u +"%Y-%m-%dT%H:%M:%SZ" > /root/BUILDTIME.txt && \
     filebrowser config init && \
     filebrowser users add admin admin --perm.admin && \
@@ -127,13 +130,14 @@ ENV USERNAME=admin \
     PASSWORD=admin \
     WORKSPACE=/workspace \
     FORGE_ARGS="" \
-    OPEN_BUTTON_PORT=8010
+    NO_ACCELERATE="" \
+    OPEN_BUTTON_PORT=80
 
 # Expose ports
-EXPOSE 8010 7010 7020 7030
+EXPOSE 80 8010 7010 7020 7030
 
 # Set working directory
 WORKDIR /workspace
 
 # Entrypoint
-ENTRYPOINT ["/opt/bin/run.sh"]
+ENTRYPOINT ["/opt/bin/start.sh"]

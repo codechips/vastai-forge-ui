@@ -69,6 +69,8 @@ The container includes an automated model provisioning system that can download 
 | `PASSWORD` | Authentication password for all services | `admin` | No |
 | `OPEN_BUTTON_PORT` | Port for Vast.ai "Open" button | `8010` | No |
 | `FORGE_ARGS` | Additional arguments for Forge UI | Empty | No |
+| `NO_ACCELERATE` | Disable accelerate optimization (enabled by default) | Empty | No |
+| `NO_TCMALLOC` | Disable TCMalloc memory optimization | Empty | No |
 
 ### Quick Provisioning Setup
 
@@ -79,7 +81,7 @@ The container includes an automated model provisioning system that can download 
    source = "huggingface"
    repo = "stabilityai/stable-diffusion-xl-base-1.0"
    file = "sd_xl_base_1.0.safetensors"
-   
+
    [models.lora.detail-tweaker]
    source = "civitai"
    model_id = "58390"
@@ -174,6 +176,15 @@ repo = "zer0int/CLIP-GmP-ViT-L-14"
 file = "ViT-L-14-BEST-smooth-GmP-HF-format.safetensors"
 ```
 
+#### 6. FLUX VAE
+```toml
+# Required for FLUX models
+[models.vae.flux-vae]
+source = "huggingface"
+repo = "black-forest-labs/FLUX.1-dev"
+file = "ae.safetensors"
+```
+
 ### Model Categories and Directories
 
 | Category | Directory | Description |
@@ -192,6 +203,7 @@ file = "ViT-L-14-BEST-smooth-GmP-HF-format.safetensors"
 
 - [**Minimal Example**](examples/test-provision-minimal.toml): Small test files for validation
 - [**Full Example**](examples/test-provision-full.toml): Comprehensive configuration with all features
+- [**FLUX Example**](examples/flux-provision.toml): Complete FLUX.1-dev setup with VAE and text encoders
 - [**Main Example**](examples/provision-config.toml): Production-ready configuration template
 
 ### Local Testing
@@ -218,13 +230,65 @@ Test the provisioning system locally:
 
 **Logs**: Check provisioning logs at `/workspace/logs/provision.log` or via the logdy interface (port 7030).
 
+## Performance Optimization
+
+### Accelerate Support (Enabled by Default)
+
+The container uses HuggingFace Accelerate by default for optimized multi-core performance:
+
+**Benefits:**
+- **Multi-core optimization**: Uses `--num_cpu_threads_per_process=6` for better CPU utilization
+- **Memory efficiency**: Improved memory management for large models
+- **Faster loading**: Optimized model loading and inference
+- **Automatic fallback**: Uses standard Python if accelerate is unavailable
+
+**Control:**
+```bash
+# Disable accelerate if needed (not recommended)
+-e NO_ACCELERATE=True
+```
+
+**Usage:**
+- **Enabled by default**: No configuration needed for optimal performance
+- **Automatic detection**: Only activates if accelerate is available
+- **Safe fallback**: Uses standard Python launch if accelerate fails
+- **Particularly beneficial**: On multi-core systems (most Vast.ai instances)
+
+### TCMalloc Memory Optimization
+
+The container automatically detects and uses TCMalloc for improved memory performance:
+
+**Features:**
+- **Automatic detection**: Finds and configures TCMalloc libraries at startup
+- **glibc compatibility**: Handles different glibc versions (pre/post 2.34)
+- **Memory efficiency**: Significantly reduces memory fragmentation
+- **CPU performance**: Better memory allocation performance
+- **Safe fallback**: Continues without TCMalloc if unavailable
+
+**Control:**
+- **Disable**: Set `NO_TCMALLOC=1` to skip TCMalloc setup
+- **Manual override**: Set `LD_PRELOAD` to use custom memory allocator
+- **Automatic**: Enabled by default on Linux systems
+
+**Supported libraries:**
+- `libtcmalloc-minimal4` (pre-installed in container)
+- `libtcmalloc.so` variants
+- Compatible with Ubuntu 22.04 glibc
+
 ## Directory Structure
 
 ```
 vastai-forge-ui/
 ├── Dockerfile                      # Single image with all components
 ├── scripts/
-│   ├── run.sh                     # Simple process manager
+│   ├── start.sh                   # Main orchestrator script
+│   ├── services/                  # Modular service scripts
+│   │   ├── utils.sh              # Shared utilities (TCMalloc, workspace)
+│   │   ├── forge.sh              # Forge WebUI service
+│   │   ├── filebrowser.sh        # File browser service
+│   │   ├── ttyd.sh               # Web terminal service
+│   │   ├── logdy.sh              # Log viewer service
+│   │   └── provisioning.sh       # Model provisioning service
 │   └── provision/                 # Model provisioning system
 │       ├── provision.py           # Main provisioning script
 │       ├── config/                # Configuration parsing
@@ -317,7 +381,7 @@ All logs are easily searchable through the logdy web interface.
 
 - **Unified authentication** across all services:
   - Forge UI: Gradio built-in authentication
-  - Filebrowser: Native authentication 
+  - Filebrowser: Native authentication
   - ttyd terminal: Basic authentication
 - **Configurable credentials** via environment variables (USERNAME/PASSWORD)
 - **Simple, secure access** to all management tools
@@ -325,16 +389,22 @@ All logs are easily searchable through the logdy web interface.
 ## Compatibility
 
 - **CUDA**: 12.1 (with 12.2 base)
-- **PyTorch**: 2.1.0 (with CUDA 12.1 support)  
+- **PyTorch**: 2.1.0 (with CUDA 12.1 support)
 - **Python**: 3.10 (Ubuntu 22.04 default)
 - **GPU**: NVIDIA GPUs with CUDA support
 - **Platform**: Vast.ai, local Docker environments
 - **Architecture**: x86_64 and ARM64
 
+
+## Useful links
+
+- https://github.com/lllyasviel/stable-diffusion-webui-forge/discussions/981
+- https://github.com/lllyasviel/stable-diffusion-webui-forge/discussions/1050
+
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch  
+2. Create a feature branch
 3. Make your changes
 4. Test with `mise run dev`
 5. Submit a pull request

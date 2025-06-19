@@ -8,6 +8,12 @@ repo = "black-forest-labs/FLUX.1-dev"
 file = "flux1-dev.safetensors"
 gated = true
 
+# FLUX.1-dev NF4 quantized model (recommended for 6-8GB VRAM, faster inference)
+[models.checkpoints.flux-dev-nf4]
+source = "huggingface"
+repo = "lllyasviel/flux1-dev-bnb-nf4"
+file = "flux1-dev-bnb-nf4-v2.safetensors"
+
 # Required CLIP text encoder for FLUX
 [models.text_encoder.clip_l]
 source = "huggingface"
@@ -41,4 +47,3 @@ file = "t5xxl_fp8_e4m3fn.safetensors"
 source = "huggingface"
 repo = "black-forest-labs/FLUX.1-dev"
 file = "ae.safetensors"
-gated = true

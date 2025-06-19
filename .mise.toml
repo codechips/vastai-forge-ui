@@ -14,9 +14,10 @@ description = "Run the Forge image locally for testing"
 depends = ["build"]
 run = [
     "echo '🚀 Starting Vast.ai Forge container...'",
-    "docker run -d --name vastai-test -p 8010:8010 -p 7010:7010 -p 7020:7020 -p 7030:7030 -e USERNAME=admin -e PASSWORD=admin vastai-forge:local",
+    "docker run -d --name vastai-test -p 80:80 -p 8010:8010 -p 7010:7010 -p 7020:7020 -p 7030:7030 -e USERNAME=admin -e PASSWORD=admin vastai-forge:local",
     "echo ''",
     "echo '🌐 Services will be available at:'",
+    "echo '  - Landing Page: http://localhost:80 (service directory)'",
     "echo '  - Forge UI: http://localhost:8010 (admin/admin)'",
     "echo '  - File Manager: http://localhost:7010 (admin/admin)'",
     "echo '  - Terminal: http://localhost:7020 (admin/admin)'",

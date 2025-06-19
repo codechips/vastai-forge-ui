@@ -32,6 +32,12 @@ source = "huggingface"
 repo = "stabilityai/sdxl-vae"
 file = "sdxl_vae.safetensors"
 
+# FLUX VAE (required for FLUX models)
+[models.vae.flux-vae]
+source = "huggingface"
+repo = "black-forest-labs/FLUX.1-dev"
+file = "ae.safetensors"
+
 # ControlNet Canny for SDXL
 [models.controlnet.canny-xl]
 source = "huggingface"
