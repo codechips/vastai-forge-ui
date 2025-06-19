@@ -3,14 +3,22 @@ Configuration parser for TOML provisioning files.
 """
 
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Any, Dict
 
 import aiohttp
 
-# Add URL processing utilities
-from ..utils.urls import URLProcessor
+# Fix imports when running as a script
+if __package__ is None:
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Try both import styles
+try:
+    from utils.urls import URLProcessor
+except ImportError:
+    from ..utils.urls import URLProcessor
 
 # Handle tomllib import for different Python versions
 if sys.version_info >= (3, 11):

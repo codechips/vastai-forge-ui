@@ -7,11 +7,20 @@ import aiohttp
 import logging
 import os
 import re
+import sys
 from pathlib import Path
 from typing import Dict, Optional
 from urllib.parse import urlparse, parse_qs
 
-from ..utils.urls import URLProcessor
+# Fix imports when running as a script
+if __package__ is None:
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Try both import styles
+try:
+    from utils.urls import URLProcessor
+except ImportError:
+    from ..utils.urls import URLProcessor
 
 
 class DirectURLDownloader:

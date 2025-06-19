@@ -13,7 +13,7 @@ function run_provisioning() {
 
     # Run provisioning script (uv will handle dependencies automatically)
     echo "provisioning: downloading models..."
-    if /opt/bin/provision/provision.py "${PROVISION_URL}"; then
+    if /opt/provision/provision.py "${PROVISION_URL}"; then
         echo "provisioning: completed successfully"
     else
         echo "provisioning: failed, but continuing startup"

@@ -109,12 +109,12 @@ COPY config/forge/ /etc/forge/
 COPY config/filebrowser/filebrowser.json /root/.filebrowser.json
 COPY scripts/start.sh /opt/bin/start.sh
 COPY scripts/services/ /opt/bin/services/
-COPY scripts/provision/ /opt/bin/provision/
+COPY scripts/provision/ /opt/provision/
 
 # Configure filebrowser, set permissions, and final cleanup
 # hadolint ignore=SC2015
 RUN mkdir -p /opt/bin && \
-    chmod +x /opt/bin/start.sh /opt/bin/services/*.sh /opt/bin/provision/provision.py && \
+    chmod +x /opt/bin/start.sh /opt/bin/services/*.sh /opt/provision/provision.py && \
     date -u +"%Y-%m-%dT%H:%M:%SZ" > /root/BUILDTIME.txt && \
     filebrowser config init && \
     filebrowser users add admin admin --perm.admin && \
