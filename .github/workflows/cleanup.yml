@@ -34,6 +34,6 @@ jobs:
         with:
           delete-only-untagged-versions: ${{ inputs.delete_untagged || true }}
           min-versions-to-keep: ${{ inputs.min_versions_to_keep || 5 }}
-          package-name: ${{ inputs.package_name || 'codechips/vastai-forge' }}
+          package-name: ${{ inputs.package_name || 'vastai-forge' }}
           package-type: ${{ inputs.package_type || 'container' }}
           token: ${{ secrets.GITHUB_TOKEN }}
